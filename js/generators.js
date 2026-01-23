@@ -4,6 +4,7 @@
 const CGenerator = new Blockly.Generator('C');
 
 CGenerator.PRECEDENCE = 0;
+CGenerator.RESERVED_WORDS_ = 'auto,break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,int,long,register,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while';
 
 CGenerator.init = function(workspace) {
     CGenerator.definitions_ = Object.create(null);
@@ -153,6 +154,8 @@ CGenerator.forBlock['controls_if'] = function(block, generator) {
 const PythonGenerator = new Blockly.Generator('Python');
 
 PythonGenerator.PRECEDENCE = 0;
+PythonGenerator.RESERVED_WORDS_ = 'and,as,assert,break,class,continue,def,del,elif,else,except,exec,finally,for,from,global,if,import,in,is,lambda,not,or,pass,print,raise,return,try,while,with,yield';
+PythonGenerator.PASS = '  pass\n';
 
 PythonGenerator.init = function(workspace) {
     PythonGenerator.definitions_ = Object.create(null);
@@ -291,6 +294,7 @@ PythonGenerator.PASS = '  pass\n';
 const CPPGenerator = new Blockly.Generator('CPP');
 
 CPPGenerator.PRECEDENCE = 0;
+CPPGenerator.RESERVED_WORDS_ = 'auto,break,case,catch,char,class,const,continue,default,delete,do,double,else,enum,extern,float,for,friend,goto,if,inline,int,long,namespace,new,operator,private,protected,public,register,return,short,signed,sizeof,static,struct,switch,template,this,throw,try,typedef,union,unsigned,virtual,void,volatile,while';
 
 CPPGenerator.init = function(workspace) {
     CPPGenerator.definitions_ = Object.create(null);
@@ -438,6 +442,7 @@ CPPGenerator.forBlock['controls_if'] = function(block, generator) {
 const RustGenerator = new Blockly.Generator('Rust');
 
 RustGenerator.PRECEDENCE = 0;
+RustGenerator.RESERVED_WORDS_ = 'as,break,const,continue,crate,else,enum,extern,false,fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,trait,true,type,unsafe,use,where,while';
 
 RustGenerator.init = function(workspace) {
     RustGenerator.definitions_ = Object.create(null);
@@ -579,9 +584,3 @@ RustGenerator.forBlock['controls_if'] = function(block, generator) {
     }
     return code + '\n';
 };
-
-// Reserved words for each language
-CGenerator.RESERVED_WORDS_ = 'auto,break,case,char,const,continue,default,do,double,else,enum,extern,float,for,goto,if,int,long,register,return,short,signed,sizeof,static,struct,switch,typedef,union,unsigned,void,volatile,while';
-PythonGenerator.RESERVED_WORDS_ = 'and,as,assert,break,class,continue,def,del,elif,else,except,exec,finally,for,from,global,if,import,in,is,lambda,not,or,pass,print,raise,return,try,while,with,yield';
-CPPGenerator.RESERVED_WORDS_ = 'auto,break,case,catch,char,class,const,continue,default,delete,do,double,else,enum,extern,float,for,friend,goto,if,inline,int,long,namespace,new,operator,private,protected,public,register,return,short,signed,sizeof,static,struct,switch,template,this,throw,try,typedef,union,unsigned,virtual,void,volatile,while';
-RustGenerator.RESERVED_WORDS_ = 'as,break,const,continue,crate,else,enum,extern,false,fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,self,Self,static,struct,super,trait,true,type,unsafe,use,where,while';

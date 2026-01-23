@@ -51,24 +51,24 @@ CGenerator.scrub_ = function(block, code) {
 };
 
 // C Blocks
-CGenerator['text_print'] = function(block) {
+CGenerator.forBlock['text_print'] = function(block, generator) {
     CGenerator.includes_['stdio'] = '#include <stdio.h>';
-    const msg = CGenerator.valueToCode(block, 'TEXT', CGenerator.PRECEDENCE) || '""';
+    const msg = generator.valueToCode(block, 'TEXT', CGenerator.PRECEDENCE) || '""';
     return 'printf("%s\\n", ' + msg + ');\n';
 };
 
-CGenerator['text'] = function(block) {
+CGenerator.forBlock['text'] = function(block, generator) {
     const textValue = block.getFieldValue('TEXT');
     const code = '"' + textValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
     return [code, CGenerator.PRECEDENCE];
 };
 
-CGenerator['math_number'] = function(block) {
+CGenerator.forBlock['math_number'] = function(block, generator) {
     const code = parseFloat(block.getFieldValue('NUM'));
     return [code, CGenerator.PRECEDENCE];
 };
 
-CGenerator['math_arithmetic'] = function(block) {
+CGenerator.forBlock['math_arithmetic'] = function(block, generator) {
     const OPERATORS = {
         'ADD': [' + ', CGenerator.PRECEDENCE],
         'MINUS': [' - ', CGenerator.PRECEDENCE],
@@ -79,8 +79,8 @@ CGenerator['math_arithmetic'] = function(block) {
     const tuple = OPERATORS[block.getFieldValue('OP')];
     const operator = tuple[0];
     const order = tuple[1];
-    const argument0 = CGenerator.valueToCode(block, 'A', order) || '0';
-    const argument1 = CGenerator.valueToCode(block, 'B', order) || '0';
+    const argument0 = generator.valueToCode(block, 'A', order) || '0';
+    const argument1 = generator.valueToCode(block, 'B', order) || '0';
     
     if (operator === null) {
         CGenerator.includes_['math'] = '#include <math.h>';
@@ -90,27 +90,27 @@ CGenerator['math_arithmetic'] = function(block) {
     return [code, order];
 };
 
-CGenerator['controls_repeat_ext'] = function(block) {
-    const repeats = CGenerator.valueToCode(block, 'TIMES', CGenerator.PRECEDENCE) || '0';
-    let branch = CGenerator.statementToCode(block, 'DO');
-    branch = CGenerator.addLoopTrap(branch, block.id);
+CGenerator.forBlock['controls_repeat_ext'] = function(block, generator) {
+    const repeats = generator.valueToCode(block, 'TIMES', CGenerator.PRECEDENCE) || '0';
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     const loopVar = CGenerator.variableDB_.getDistinctName('i', Blockly.Variables.NAME_TYPE);
     const code = 'for (int ' + loopVar + ' = 0; ' + loopVar + ' < ' + repeats + '; ' + loopVar + '++) {\n' + branch + '}\n';
     return code;
 };
 
-CGenerator['controls_whileUntil'] = function(block) {
+CGenerator.forBlock['controls_whileUntil'] = function(block, generator) {
     const until = block.getFieldValue('MODE') === 'UNTIL';
-    let argument0 = CGenerator.valueToCode(block, 'BOOL', CGenerator.PRECEDENCE) || 'false';
+    let argument0 = generator.valueToCode(block, 'BOOL', CGenerator.PRECEDENCE) || 'false';
     if (until) {
         argument0 = '!(' + argument0 + ')';
     }
-    let branch = CGenerator.statementToCode(block, 'DO');
-    branch = CGenerator.addLoopTrap(branch, block.id);
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     return 'while (' + argument0 + ') {\n' + branch + '}\n';
 };
 
-CGenerator['logic_compare'] = function(block) {
+CGenerator.forBlock['logic_compare'] = function(block, generator) {
     const OPERATORS = {
         'EQ': '==',
         'NEQ': '!=',
@@ -120,30 +120,30 @@ CGenerator['logic_compare'] = function(block) {
         'GTE': '>='
     };
     const operator = OPERATORS[block.getFieldValue('OP')];
-    const argument0 = CGenerator.valueToCode(block, 'A', CGenerator.PRECEDENCE) || '0';
-    const argument1 = CGenerator.valueToCode(block, 'B', CGenerator.PRECEDENCE) || '0';
+    const argument0 = generator.valueToCode(block, 'A', CGenerator.PRECEDENCE) || '0';
+    const argument1 = generator.valueToCode(block, 'B', CGenerator.PRECEDENCE) || '0';
     const code = argument0 + ' ' + operator + ' ' + argument1;
     return [code, CGenerator.PRECEDENCE];
 };
 
-CGenerator['logic_boolean'] = function(block) {
+CGenerator.forBlock['logic_boolean'] = function(block, generator) {
     const code = (block.getFieldValue('BOOL') === 'TRUE') ? 'true' : 'false';
     CGenerator.includes_['stdbool'] = '#include <stdbool.h>';
     return [code, CGenerator.PRECEDENCE];
 };
 
-CGenerator['controls_if'] = function(block) {
+CGenerator.forBlock['controls_if'] = function(block, generator) {
     let code = '', branchCode, conditionCode;
     const n = block.elseifCount_ || 0;
     
     for (let i = 0; i <= n; i++) {
-        conditionCode = CGenerator.valueToCode(block, 'IF' + i, CGenerator.PRECEDENCE) || 'false';
-        branchCode = CGenerator.statementToCode(block, 'DO' + i);
+        conditionCode = generator.valueToCode(block, 'IF' + i, CGenerator.PRECEDENCE) || 'false';
+        branchCode = generator.statementToCode(block, 'DO' + i);
         code += (i === 0 ? 'if' : ' else if') + ' (' + conditionCode + ') {\n' + branchCode + '}';
     }
     
     if (block.elseCount_) {
-        branchCode = CGenerator.statementToCode(block, 'ELSE');
+        branchCode = generator.statementToCode(block, 'ELSE');
         code += ' else {\n' + branchCode + '}';
     }
     return code + '\n';
@@ -194,23 +194,23 @@ PythonGenerator.scrub_ = function(block, code) {
 };
 
 // Python Blocks
-PythonGenerator['text_print'] = function(block) {
-    const msg = PythonGenerator.valueToCode(block, 'TEXT', PythonGenerator.PRECEDENCE) || '""';
+PythonGenerator.forBlock['text_print'] = function(block, generator) {
+    const msg = generator.valueToCode(block, 'TEXT', PythonGenerator.PRECEDENCE) || '""';
     return 'print(' + msg + ')\n';
 };
 
-PythonGenerator['text'] = function(block) {
+PythonGenerator.forBlock['text'] = function(block, generator) {
     const textValue = block.getFieldValue('TEXT');
     const code = "'" + textValue.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n') + "'";
     return [code, PythonGenerator.PRECEDENCE];
 };
 
-PythonGenerator['math_number'] = function(block) {
+PythonGenerator.forBlock['math_number'] = function(block, generator) {
     const code = parseFloat(block.getFieldValue('NUM'));
     return [code, PythonGenerator.PRECEDENCE];
 };
 
-PythonGenerator['math_arithmetic'] = function(block) {
+PythonGenerator.forBlock['math_arithmetic'] = function(block, generator) {
     const OPERATORS = {
         'ADD': [' + ', PythonGenerator.PRECEDENCE],
         'MINUS': [' - ', PythonGenerator.PRECEDENCE],
@@ -221,33 +221,33 @@ PythonGenerator['math_arithmetic'] = function(block) {
     const tuple = OPERATORS[block.getFieldValue('OP')];
     const operator = tuple[0];
     const order = tuple[1];
-    const argument0 = PythonGenerator.valueToCode(block, 'A', order) || '0';
-    const argument1 = PythonGenerator.valueToCode(block, 'B', order) || '0';
+    const argument0 = generator.valueToCode(block, 'A', order) || '0';
+    const argument1 = generator.valueToCode(block, 'B', order) || '0';
     const code = argument0 + operator + argument1;
     return [code, order];
 };
 
-PythonGenerator['controls_repeat_ext'] = function(block) {
-    const repeats = PythonGenerator.valueToCode(block, 'TIMES', PythonGenerator.PRECEDENCE) || '0';
-    let branch = PythonGenerator.statementToCode(block, 'DO');
-    branch = PythonGenerator.addLoopTrap(branch, block.id) || PythonGenerator.PASS;
+PythonGenerator.forBlock['controls_repeat_ext'] = function(block, generator) {
+    const repeats = generator.valueToCode(block, 'TIMES', PythonGenerator.PRECEDENCE) || '0';
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id) || PythonGenerator.PASS;
     const loopVar = PythonGenerator.variableDB_.getDistinctName('i', Blockly.Variables.NAME_TYPE);
     const code = 'for ' + loopVar + ' in range(' + repeats + '):\n' + branch;
     return code;
 };
 
-PythonGenerator['controls_whileUntil'] = function(block) {
+PythonGenerator.forBlock['controls_whileUntil'] = function(block, generator) {
     const until = block.getFieldValue('MODE') === 'UNTIL';
-    let argument0 = PythonGenerator.valueToCode(block, 'BOOL', PythonGenerator.PRECEDENCE) || 'False';
+    let argument0 = generator.valueToCode(block, 'BOOL', PythonGenerator.PRECEDENCE) || 'False';
     if (until) {
         argument0 = 'not (' + argument0 + ')';
     }
-    let branch = PythonGenerator.statementToCode(block, 'DO');
-    branch = PythonGenerator.addLoopTrap(branch, block.id) || PythonGenerator.PASS;
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id) || PythonGenerator.PASS;
     return 'while ' + argument0 + ':\n' + branch;
 };
 
-PythonGenerator['logic_compare'] = function(block) {
+PythonGenerator.forBlock['logic_compare'] = function(block, generator) {
     const OPERATORS = {
         'EQ': '==',
         'NEQ': '!=',
@@ -257,29 +257,29 @@ PythonGenerator['logic_compare'] = function(block) {
         'GTE': '>='
     };
     const operator = OPERATORS[block.getFieldValue('OP')];
-    const argument0 = PythonGenerator.valueToCode(block, 'A', PythonGenerator.PRECEDENCE) || '0';
-    const argument1 = PythonGenerator.valueToCode(block, 'B', PythonGenerator.PRECEDENCE) || '0';
+    const argument0 = generator.valueToCode(block, 'A', PythonGenerator.PRECEDENCE) || '0';
+    const argument1 = generator.valueToCode(block, 'B', PythonGenerator.PRECEDENCE) || '0';
     const code = argument0 + ' ' + operator + ' ' + argument1;
     return [code, PythonGenerator.PRECEDENCE];
 };
 
-PythonGenerator['logic_boolean'] = function(block) {
+PythonGenerator.forBlock['logic_boolean'] = function(block, generator) {
     const code = (block.getFieldValue('BOOL') === 'TRUE') ? 'True' : 'False';
     return [code, PythonGenerator.PRECEDENCE];
 };
 
-PythonGenerator['controls_if'] = function(block) {
+PythonGenerator.forBlock['controls_if'] = function(block, generator) {
     let code = '', branchCode, conditionCode;
     const n = block.elseifCount_ || 0;
     
     for (let i = 0; i <= n; i++) {
-        conditionCode = PythonGenerator.valueToCode(block, 'IF' + i, PythonGenerator.PRECEDENCE) || 'False';
-        branchCode = PythonGenerator.statementToCode(block, 'DO' + i) || PythonGenerator.PASS;
+        conditionCode = generator.valueToCode(block, 'IF' + i, PythonGenerator.PRECEDENCE) || 'False';
+        branchCode = generator.statementToCode(block, 'DO' + i) || PythonGenerator.PASS;
         code += (i === 0 ? 'if' : 'elif') + ' ' + conditionCode + ':\n' + branchCode;
     }
     
     if (block.elseCount_) {
-        branchCode = PythonGenerator.statementToCode(block, 'ELSE') || PythonGenerator.PASS;
+        branchCode = generator.statementToCode(block, 'ELSE') || PythonGenerator.PASS;
         code += 'else:\n' + branchCode;
     }
     return code;
@@ -337,24 +337,24 @@ CPPGenerator.scrub_ = function(block, code) {
 };
 
 // C++ Blocks
-CPPGenerator['text_print'] = function(block) {
+CPPGenerator.forBlock['text_print'] = function(block, generator) {
     CPPGenerator.includes_['iostream'] = '#include <iostream>\nusing namespace std;';
-    const msg = CPPGenerator.valueToCode(block, 'TEXT', CPPGenerator.PRECEDENCE) || '""';
+    const msg = generator.valueToCode(block, 'TEXT', CPPGenerator.PRECEDENCE) || '""';
     return 'cout << ' + msg + ' << endl;\n';
 };
 
-CPPGenerator['text'] = function(block) {
+CPPGenerator.forBlock['text'] = function(block, generator) {
     const textValue = block.getFieldValue('TEXT');
     const code = '"' + textValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
     return [code, CPPGenerator.PRECEDENCE];
 };
 
-CPPGenerator['math_number'] = function(block) {
+CPPGenerator.forBlock['math_number'] = function(block, generator) {
     const code = parseFloat(block.getFieldValue('NUM'));
     return [code, CPPGenerator.PRECEDENCE];
 };
 
-CPPGenerator['math_arithmetic'] = function(block) {
+CPPGenerator.forBlock['math_arithmetic'] = function(block, generator) {
     const OPERATORS = {
         'ADD': [' + ', CPPGenerator.PRECEDENCE],
         'MINUS': [' - ', CPPGenerator.PRECEDENCE],
@@ -365,8 +365,8 @@ CPPGenerator['math_arithmetic'] = function(block) {
     const tuple = OPERATORS[block.getFieldValue('OP')];
     const operator = tuple[0];
     const order = tuple[1];
-    const argument0 = CPPGenerator.valueToCode(block, 'A', order) || '0';
-    const argument1 = CPPGenerator.valueToCode(block, 'B', order) || '0';
+    const argument0 = generator.valueToCode(block, 'A', order) || '0';
+    const argument1 = generator.valueToCode(block, 'B', order) || '0';
     
     if (operator === null) {
         CPPGenerator.includes_['cmath'] = '#include <cmath>';
@@ -376,27 +376,27 @@ CPPGenerator['math_arithmetic'] = function(block) {
     return [code, order];
 };
 
-CPPGenerator['controls_repeat_ext'] = function(block) {
-    const repeats = CPPGenerator.valueToCode(block, 'TIMES', CPPGenerator.PRECEDENCE) || '0';
-    let branch = CPPGenerator.statementToCode(block, 'DO');
-    branch = CPPGenerator.addLoopTrap(branch, block.id);
+CPPGenerator.forBlock['controls_repeat_ext'] = function(block, generator) {
+    const repeats = generator.valueToCode(block, 'TIMES', CPPGenerator.PRECEDENCE) || '0';
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     const loopVar = CPPGenerator.variableDB_.getDistinctName('i', Blockly.Variables.NAME_TYPE);
     const code = 'for (int ' + loopVar + ' = 0; ' + loopVar + ' < ' + repeats + '; ' + loopVar + '++) {\n' + branch + '}\n';
     return code;
 };
 
-CPPGenerator['controls_whileUntil'] = function(block) {
+CPPGenerator.forBlock['controls_whileUntil'] = function(block, generator) {
     const until = block.getFieldValue('MODE') === 'UNTIL';
-    let argument0 = CPPGenerator.valueToCode(block, 'BOOL', CPPGenerator.PRECEDENCE) || 'false';
+    let argument0 = generator.valueToCode(block, 'BOOL', CPPGenerator.PRECEDENCE) || 'false';
     if (until) {
         argument0 = '!(' + argument0 + ')';
     }
-    let branch = CPPGenerator.statementToCode(block, 'DO');
-    branch = CPPGenerator.addLoopTrap(branch, block.id);
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     return 'while (' + argument0 + ') {\n' + branch + '}\n';
 };
 
-CPPGenerator['logic_compare'] = function(block) {
+CPPGenerator.forBlock['logic_compare'] = function(block, generator) {
     const OPERATORS = {
         'EQ': '==',
         'NEQ': '!=',
@@ -406,29 +406,29 @@ CPPGenerator['logic_compare'] = function(block) {
         'GTE': '>='
     };
     const operator = OPERATORS[block.getFieldValue('OP')];
-    const argument0 = CPPGenerator.valueToCode(block, 'A', CPPGenerator.PRECEDENCE) || '0';
-    const argument1 = CPPGenerator.valueToCode(block, 'B', CPPGenerator.PRECEDENCE) || '0';
+    const argument0 = generator.valueToCode(block, 'A', CPPGenerator.PRECEDENCE) || '0';
+    const argument1 = generator.valueToCode(block, 'B', CPPGenerator.PRECEDENCE) || '0';
     const code = argument0 + ' ' + operator + ' ' + argument1;
     return [code, CPPGenerator.PRECEDENCE];
 };
 
-CPPGenerator['logic_boolean'] = function(block) {
+CPPGenerator.forBlock['logic_boolean'] = function(block, generator) {
     const code = (block.getFieldValue('BOOL') === 'TRUE') ? 'true' : 'false';
     return [code, CPPGenerator.PRECEDENCE];
 };
 
-CPPGenerator['controls_if'] = function(block) {
+CPPGenerator.forBlock['controls_if'] = function(block, generator) {
     let code = '', branchCode, conditionCode;
     const n = block.elseifCount_ || 0;
     
     for (let i = 0; i <= n; i++) {
-        conditionCode = CPPGenerator.valueToCode(block, 'IF' + i, CPPGenerator.PRECEDENCE) || 'false';
-        branchCode = CPPGenerator.statementToCode(block, 'DO' + i);
+        conditionCode = generator.valueToCode(block, 'IF' + i, CPPGenerator.PRECEDENCE) || 'false';
+        branchCode = generator.statementToCode(block, 'DO' + i);
         code += (i === 0 ? 'if' : ' else if') + ' (' + conditionCode + ') {\n' + branchCode + '}';
     }
     
     if (block.elseCount_) {
-        branchCode = CPPGenerator.statementToCode(block, 'ELSE');
+        branchCode = generator.statementToCode(block, 'ELSE');
         code += ' else {\n' + branchCode + '}';
     }
     return code + '\n';
@@ -485,23 +485,23 @@ RustGenerator.scrub_ = function(block, code) {
 };
 
 // Rust Blocks
-RustGenerator['text_print'] = function(block) {
-    const msg = RustGenerator.valueToCode(block, 'TEXT', RustGenerator.PRECEDENCE) || '""';
+RustGenerator.forBlock['text_print'] = function(block, generator) {
+    const msg = generator.valueToCode(block, 'TEXT', RustGenerator.PRECEDENCE) || '""';
     return 'println!("{}", ' + msg + ');\n';
 };
 
-RustGenerator['text'] = function(block) {
+RustGenerator.forBlock['text'] = function(block, generator) {
     const textValue = block.getFieldValue('TEXT');
     const code = '"' + textValue.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"';
     return [code, RustGenerator.PRECEDENCE];
 };
 
-RustGenerator['math_number'] = function(block) {
+RustGenerator.forBlock['math_number'] = function(block, generator) {
     const code = parseFloat(block.getFieldValue('NUM'));
     return [code, RustGenerator.PRECEDENCE];
 };
 
-RustGenerator['math_arithmetic'] = function(block) {
+RustGenerator.forBlock['math_arithmetic'] = function(block, generator) {
     const OPERATORS = {
         'ADD': [' + ', RustGenerator.PRECEDENCE],
         'MINUS': [' - ', RustGenerator.PRECEDENCE],
@@ -512,8 +512,8 @@ RustGenerator['math_arithmetic'] = function(block) {
     const tuple = OPERATORS[block.getFieldValue('OP')];
     const operator = tuple[0];
     const order = tuple[1];
-    const argument0 = RustGenerator.valueToCode(block, 'A', order) || '0';
-    const argument1 = RustGenerator.valueToCode(block, 'B', order) || '0';
+    const argument0 = generator.valueToCode(block, 'A', order) || '0';
+    const argument1 = generator.valueToCode(block, 'B', order) || '0';
     
     if (operator === null) {
         return ['(' + argument0 + ' as f64).powf(' + argument1 + ' as f64) as i32', RustGenerator.PRECEDENCE];
@@ -522,27 +522,27 @@ RustGenerator['math_arithmetic'] = function(block) {
     return [code, order];
 };
 
-RustGenerator['controls_repeat_ext'] = function(block) {
-    const repeats = RustGenerator.valueToCode(block, 'TIMES', RustGenerator.PRECEDENCE) || '0';
-    let branch = RustGenerator.statementToCode(block, 'DO');
-    branch = RustGenerator.addLoopTrap(branch, block.id);
+RustGenerator.forBlock['controls_repeat_ext'] = function(block, generator) {
+    const repeats = generator.valueToCode(block, 'TIMES', RustGenerator.PRECEDENCE) || '0';
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     const loopVar = RustGenerator.variableDB_.getDistinctName('i', Blockly.Variables.NAME_TYPE);
     const code = 'for ' + loopVar + ' in 0..' + repeats + ' {\n' + branch + '}\n';
     return code;
 };
 
-RustGenerator['controls_whileUntil'] = function(block) {
+RustGenerator.forBlock['controls_whileUntil'] = function(block, generator) {
     const until = block.getFieldValue('MODE') === 'UNTIL';
-    let argument0 = RustGenerator.valueToCode(block, 'BOOL', RustGenerator.PRECEDENCE) || 'false';
+    let argument0 = generator.valueToCode(block, 'BOOL', RustGenerator.PRECEDENCE) || 'false';
     if (until) {
         argument0 = '!(' + argument0 + ')';
     }
-    let branch = RustGenerator.statementToCode(block, 'DO');
-    branch = RustGenerator.addLoopTrap(branch, block.id);
+    let branch = generator.statementToCode(block, 'DO');
+    branch = generator.addLoopTrap(branch, block.id);
     return 'while ' + argument0 + ' {\n' + branch + '}\n';
 };
 
-RustGenerator['logic_compare'] = function(block) {
+RustGenerator.forBlock['logic_compare'] = function(block, generator) {
     const OPERATORS = {
         'EQ': '==',
         'NEQ': '!=',
@@ -552,29 +552,29 @@ RustGenerator['logic_compare'] = function(block) {
         'GTE': '>='
     };
     const operator = OPERATORS[block.getFieldValue('OP')];
-    const argument0 = RustGenerator.valueToCode(block, 'A', RustGenerator.PRECEDENCE) || '0';
-    const argument1 = RustGenerator.valueToCode(block, 'B', RustGenerator.PRECEDENCE) || '0';
+    const argument0 = generator.valueToCode(block, 'A', RustGenerator.PRECEDENCE) || '0';
+    const argument1 = generator.valueToCode(block, 'B', RustGenerator.PRECEDENCE) || '0';
     const code = argument0 + ' ' + operator + ' ' + argument1;
     return [code, RustGenerator.PRECEDENCE];
 };
 
-RustGenerator['logic_boolean'] = function(block) {
+RustGenerator.forBlock['logic_boolean'] = function(block, generator) {
     const code = (block.getFieldValue('BOOL') === 'TRUE') ? 'true' : 'false';
     return [code, RustGenerator.PRECEDENCE];
 };
 
-RustGenerator['controls_if'] = function(block) {
+RustGenerator.forBlock['controls_if'] = function(block, generator) {
     let code = '', branchCode, conditionCode;
     const n = block.elseifCount_ || 0;
     
     for (let i = 0; i <= n; i++) {
-        conditionCode = RustGenerator.valueToCode(block, 'IF' + i, RustGenerator.PRECEDENCE) || 'false';
-        branchCode = RustGenerator.statementToCode(block, 'DO' + i);
+        conditionCode = generator.valueToCode(block, 'IF' + i, RustGenerator.PRECEDENCE) || 'false';
+        branchCode = generator.statementToCode(block, 'DO' + i);
         code += (i === 0 ? 'if' : ' else if') + ' ' + conditionCode + ' {\n' + branchCode + '}';
     }
     
     if (block.elseCount_) {
-        branchCode = RustGenerator.statementToCode(block, 'ELSE');
+        branchCode = generator.statementToCode(block, 'ELSE');
         code += ' else {\n' + branchCode + '}';
     }
     return code + '\n';

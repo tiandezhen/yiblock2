@@ -1,0 +1,23 @@
+{
+  "name": "yiblock2",
+  "version": "1.0.0",
+  "description": "Block-based modular programming web application with multi-language code generation support",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 8080",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "blockly",
+    "visual-programming",
+    "code-generation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "blockly": "^11.1.1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
